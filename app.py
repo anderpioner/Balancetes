@@ -156,6 +156,15 @@ def main():
     bank_df['MonthlyProfit_SMA12_Scaled'] = bank_df['MonthlyProfit_SMA12'] / scale_factor_profit
 
     st.markdown("### Monthly Profit Evolution")
+    st.markdown(
+        """
+        <div style="display: flex; align-items: center; margin-bottom: 10px; font-size: 0.8em; color: gray;">
+            <span style="display: inline-block; width: 30px; height: 3px; background-color: orange; margin-right: 8px;"></span>
+            12-Month Simple Moving Average
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
     
     base = alt.Chart(bank_df).encode(x=alt.X('Date:T', scale=alt.Scale(nice=True)))
 
