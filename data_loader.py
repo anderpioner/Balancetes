@@ -335,10 +335,101 @@ def load_valuation_data(directory):
         print(f"Error loading valuation data: {e}")
         return pd.DataFrame()
 
+def load_fundamentus_data():
+    """
+    Scrapes valuation data from 'www.fundamentus.com.br'.
+    Returns DataFrame with columns: [Ticker, Price, P/L, DY]
+    """
+    import requests
+    import io
+    
+    url = "https://www.fundamentus.com.br/resultado.php"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    }
+    
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+        
+        # Parse table using pandas
+        # Brazil uses decimal=',' and thousands='.'
+        tables = pd.read_html(io.StringIO(response.text), decimal=',', thousands='.')
+        
+        if not tables:
+            print("No tables found on Fundamentus.")
+            return pd.DataFrame()
+            
+        df = tables[0]
+        
+        # Rename columns to match our internal schema
+        # Expected columns from Fundamentus: 'Papel', 'Cotação', 'P/L', 'Div.Yield'
+        # We need to map them to: 'Ticker', 'Price', 'P/L', 'DY'
+        
+        rename_map = {
+            'Papel': 'Ticker',
+            'Cotação': 'Price',
+            'P/L': 'P/L',
+            'Div.Yield': 'DY'
+        }
+        
+        # Check if required columns exist
+        if not set(rename_map.keys()).issubset(df.columns):
+            print(f"Fundamentus schema changed. Found: {df.columns.tolist()}")
+            return pd.DataFrame()
+            
+        df = df.rename(columns=rename_map)
+        df = df[list(rename_map.values())].copy()
+        
+        # Data Cleaning
+        def clean_percentage(x):
+            if isinstance(x, str):
+                x = x.replace('%', '').replace('.', '').replace(',', '.')
+                return float(x) / 100
+            if isinstance(x, (int, float)):
+                return float(x) / 100 # Fundamentus usually returns % as string, but if pandas parsed it as float (e.g. 5.0 for 5%), we might need diving. 
+                # Actually read_html(decimal=',') handles numbers well, but % often remains string.
+                # Let's inspect typical behavior: '6,67%' -> string. 
+            return x
+
+        # Price and P/L should be floats already due to read_html(decimal=','), but let's ensure
+        # Sometimes read_html might miss if there are weird chars. 
+        # Fundamental: 'Cotação' matches 1000 with user locale? Yes.
+        
+        # Handle simple numeric conversions just in case
+        for col in ['Price', 'P/L']:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+            
+        # Handle Percentage for DY
+        # Fundamentus sends 'Div.Yield' as '6,00%'. pd.read_html might not strip %.
+        # If it is object type, we clean.
+        if df['DY'].dtype == 'object':
+             df['DY'] = df['DY'].apply(clean_percentage)
+        else:
+             # If it parsed as float (unlikely with %), check scale. 
+             # Usually request returns string "6,75%".
+             pass
+             
+        # Normalize Ticker (First 4 chars)
+        # e.g. ITUB4 -> ITUB
+        df['Ticker'] = df['Ticker'].astype(str).str.strip().str[:4]
+        
+        # Drop duplicates, keeping first
+        df = df.drop_duplicates(subset=['Ticker'])
+        
+        print(f"Successfully loaded {len(df)} records from Fundamentus.")
+        return df[['Ticker', 'Price', 'P/L', 'DY']]
+
+    except Exception as e:
+        print(f"Error scraping Fundamentus: {e}")
+        return pd.DataFrame()
+
 if __name__ == "__main__":
     # Test run
-    df = load_initial_data(r'c:\D\Python\Balancetes\historical')
+    # df = load_initial_data(r'c:\D\Python\Balancetes\historical')
     # ... existing test code ...
-    val_df = load_valuation_data(r'c:\D\Python\Balancetes')
-    print("--- VALUATION HEAD ---")
-    print(val_df.head())
+    # val_df = load_valuation_data(r'c:\D\Python\Balancetes')
+    
+    fund_df = load_fundamentus_data()
+    print("--- FUNDAMENTUS HEAD ---")
+    print(fund_df.head())

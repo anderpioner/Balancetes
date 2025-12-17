@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import altair as alt
-from data_loader import load_initial_data, load_valuation_data
+from data_loader import load_initial_data, load_fundamentus_data
 
 # Page Config
 st.set_page_config(page_title="Banking Dashboard", layout="wide")
@@ -24,21 +24,15 @@ BANK_NAMES = {
     'BGIP': 'BGIP4 - BCO DO EST. DE SE S.A.',
     'BEES': 'BEES3 - BCO BANESTES S.A.',
     'BLIS': 'BLIS4 - BRB - BCO DE BRASILIA S.A.',
-    'BPAN': 'BPAN4 - BANCO PAN',
-    'ROXO': 'ROXO34 - Nu Financeira',
-    'INBR': 'INBR32 - Banco Inter',
-    'XPBR': 'XPBR31 - Banco XP'
+    'BPAN': 'BPAN4 - BANCO PAN'
 }
 
 @st.cache_data
 def get_data():
     df = load_initial_data(DATA_DIR)
     
-    # Load Valuation Data
-    # Parent directory of 'historical' is 'c:\D\Python\Balancetes'
-    import os
-    root_dir = os.path.dirname(DATA_DIR)
-    val_df = load_valuation_data(root_dir)
+    # Load Valuation Data from Fundamentus (Live)
+    val_df = load_fundamentus_data()
     
     return df, val_df
 
