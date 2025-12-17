@@ -27,7 +27,10 @@ def load_csv_data(directory, existing_df):
         'BCO DO EST. DE SE S.A.': 'BGIP',
         'BCO BANESTES S.A.': 'BEES',
         'BRB - BCO DE BRASILIA S.A.': 'BLIS',
-        'BANCO PAN': 'BPAN'
+        'BANCO PAN': 'BPAN',
+        'NU FINANCEIRA S.A. - SOCIEDADE DE CRÉDITO, FINANCIAMENTO E INVESTIMENTO': 'ROXO',
+        'BANCO INTER': 'INBR',
+        'BCO XP S.A.': 'XPBR'
     }
     
     csv_files = glob.glob(os.path.join(directory, "*BANCOS.CSV"))
@@ -292,7 +295,7 @@ def load_valuation_data(directory):
         # But we saw Unnamed columns when reading default?
         # Let's read header=1 to skip row 0.
         
-        df = pd.read_excel(file_path, header=1)
+        df = pd.read_excel(file_path, header=0)
         
         # Determine strict indices based on user request/inspection
         # Col 0: Ticker

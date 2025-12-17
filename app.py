@@ -24,7 +24,10 @@ BANK_NAMES = {
     'BGIP': 'BGIP4 - BCO DO EST. DE SE S.A.',
     'BEES': 'BEES3 - BCO BANESTES S.A.',
     'BLIS': 'BLIS4 - BRB - BCO DE BRASILIA S.A.',
-    'BPAN': 'BPAN4 - BANCO PAN'
+    'BPAN': 'BPAN4 - BANCO PAN',
+    'ROXO': 'ROXO34 - Nu Financeira',
+    'INBR': 'INBR32 - Banco Inter',
+    'XPBR': 'XPBR31 - Banco XP'
 }
 
 @st.cache_data
